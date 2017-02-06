@@ -13,4 +13,7 @@ https://github.com/tomstewart89/BasicLinearAlgebra
 
 Useful for Robotic Arms and TFT Screen <a href="https://github.com/blascarr/TFTCourse/tree/master/SPFD5408/7_trMatrix">https://github.com/blascarr/TFTCourse/tree/master/SPFD5408/7_trMatrix</a>
 
+  Blascarr invests time and resources providing this open source code like some other libraries, please
+  respect the job and support open-source software.
+  
 Written by Adrian for Blascarr
