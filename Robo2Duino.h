@@ -1,12 +1,12 @@
 /* Robo2Duino
   Design and created by Blascarr
 
-  Robo2Duino
+  Robotic2Duino
   Name    : Blascarr
   Description: Robo2Duino.h
   version : 1.0
 
-Robo2Duino is a generic library useful for Advanced Robotics Applications.
+Robotic2Duino is a generic library useful for Advanced Robotics Applications.
 
 This library is part of a educational course to learn C++ in practice in https://github.com/blascarr/Robotic2Duino Couser or http://www.blascarr.com/ webpage.
 
@@ -17,11 +17,7 @@ This library is part of a educational course to learn C++ in practice in https:/
  *	https://github.com/tomstewart89/BasicLinearAlgebra
  *
  *  Useful for Robotic Arms and TFT Screen https://github.com/blascarr/TFTCourse
- *
- * 	Blascarr invests time and resources providing this open source code like some other libraries, please
- * 	respect the job and support open-source software.
- *
- *	Written by Adrian for Blascarr
+ *Written by Adrian for Blascarr
  */
 
  #ifndef Robo2Duino_h
@@ -56,6 +52,12 @@ This library is part of a educational course to learn C++ in practice in https:/
 			};
 
 			Point2D(float x0, float y0, uint16_t color0){
+				x = x0;
+				y = y0;
+				color = color0;
+			};
+
+			void Point2D::set(float x0, float y0, uint16_t color0 = 0x000000){
 				x = x0;
 				y = y0;
 				color = color0;
@@ -153,41 +155,54 @@ This library is part of a educational course to learn C++ in practice in https:/
 			};
 
 			Pose2D(float px , float py , float angle){
-				m = se2(px, py, angle);
+				Pose2D::m = se2(px, py, angle);
 			};
 
-			Pose2D::setInv(bool mx, bool my){
+			void Pose2D::setInv(bool mx, bool my){
 				if (mx) inv_x=-1;
 				if (my) inv_y=-1;
 			};
 
+			void set(float px , float py , float angle){
+				Pose2D::m = se2(px, py, angle);
+			};
+
 			Matrix<3, 3, float> Pose2D::move(Matrix<3, 3, float> m){
+				//Inverse axis not defined
 				Pose2D::m = Pose2D::m*m;
 				return Pose2D::m;
 			};
 
+			Matrix<3, 3, float> Pose2D::move(float px , float py , float angle){
+				if (Pose2D::inv_x == -1) {px*=-1; angle*=-1;}
+				if (Pose2D::inv_y == -1) {py*=-1;angle*=-1;}
+
+				Pose2D::m = Pose2D::m*se2(px,py,angle);
+				return Pose2D::m;
+			};
+
 			Matrix<3, 3, float> Pose2D::fwd(float d){
-				Pose2D::m = se2(d,0,0)*Pose2D::m;
+				Pose2D::m = Pose2D::move(d,0,0);
 				return Pose2D::m;
 			};
 
 			Matrix<3, 3, float> Pose2D::back(float d){
-				Pose2D::m =se2(-d,0,0)*Pose2D::m;
+				Pose2D::m = Pose2D::move(-d,0,0);
 				return Pose2D::m;
 			};
 
 			Matrix<3, 3, float> Pose2D::left(float d){
-				Pose2D::m =se2(0,d,0)*Pose2D::m;
+				Pose2D::m = Pose2D::move(0,-d,0);
 				return Pose2D::m;
 			};
 
 			Matrix<3, 3, float> Pose2D::right(float d){
-				Pose2D::m = se2(0,-d,0)*Pose2D::m;
+				Pose2D::m = Pose2D::move(0,d,0);
 				return Pose2D::m;
 			};
 
 			Matrix<3, 3, float> Pose2D::turn(float angle){
-				Pose2D::m = se2(0,0,angle)*Pose2D::m;
+				Pose2D::m = Pose2D::move(0,0,angle);
 				return Pose2D::m;
 			};
 
