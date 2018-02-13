@@ -95,8 +95,6 @@ This library is part of a educational course to learn C++ in practice in https:/
 			};
 	};
 
-
-
  	float ang2rad=180/PI;
 	
 	//Multiply 3x3 matrix with a 3x1 ( 3x3 * 3x1 = 3x1 )  vector or Matrix or viceversa ( 1x3 * 3x3 = 1x3 ) 
@@ -158,6 +156,12 @@ This library is part of a educational course to learn C++ in practice in https:/
 				Pose2D::m = se2(px, py, angle);
 			};
 
+			/*Pose2D(Pose2D *p){
+				Pose2D::m = p.m;
+				Pose2D::inv_x = p.inv_x;
+				Pose2D::inv_y = p.inv_y;
+			};*/
+
 			void Pose2D::setInv(bool mx, bool my){
 				if (mx) inv_x=-1;
 				if (my) inv_y=-1;
@@ -165,6 +169,12 @@ This library is part of a educational course to learn C++ in practice in https:/
 
 			void set(float px , float py , float angle){
 				Pose2D::m = se2(px, py, angle);
+			};
+
+			void set(Pose2D p){
+				Pose2D::m = p.m;
+				Pose2D::inv_x = p.inv_x;
+				Pose2D::inv_y = p.inv_y;
 			};
 
 			Matrix<3, 3, float> Pose2D::move(Matrix<3, 3, float> m){
@@ -228,7 +238,8 @@ This library is part of a educational course to learn C++ in practice in https:/
 	}
 
 	class Link2D{
-
+		public:
+			
 
 	};
 
