@@ -8,7 +8,7 @@
 
 Robotic2Duino is a generic library useful for Advanced Robotics Applications.
 
-This library is part of a educational course to learn C++ in practice in https://github.com/blascarr/Robotic2Duino Couser or http://www.blascarr.com/ webpage.
+This library is part of a educational course to learn C++ in practice in https://github.com/blascarr/Robo2Duino Couser or http://www.blascarr.com/ webpage.
 
  *	
  *  This Library gives some helpful methods to manipulate transformation Matrix in order to create references
@@ -22,7 +22,7 @@ This library is part of a educational course to learn C++ in practice in https:/
 
  #ifndef Robo2Duino_h
  #define Robo2Duino_h	
- 	#define debug 0
+
  	#include "BasicLinearAlgebra.h"
 	#include <stdarg.h>
 
@@ -31,216 +31,198 @@ This library is part of a educational course to learn C++ in practice in https:/
 	#else
 		#include "WProgram.h"
 	#endif
- 	
- 	//Point 2D Class for reference
-	class Point2D{
-		public:
-			
-			float x, y;
-			int inv_x=1; 
-			int inv_y=1;
-			uint16_t color;
+ 	using namespace BLA;
 
-			Point2D(void){
-				x = y = 0;
-			};
+	float ang2rad=180/PI;
+	float rad2ang=PI/180;
 
-			Point2D(float x0, float y0){
-				x = x0;
-				y = y0;
-				color = 0x000000;
-			};
+	typedef Matrix< 1, 2 > vector2D;
+	typedef Matrix< 1, 3 > vector3D;
+	typedef Matrix< 2, 2 > rot2D;
+	typedef Matrix< 3, 3 > Pose2D;
+	typedef Matrix< 4, 4 > Pose3D;
 
-			Point2D(float x0, float y0, uint16_t color0){
-				x = x0;
-				y = y0;
-				color = color0;
-			};
+ 	struct ref2D{   
+		bool swerve = true;     // Levorotation = true ( z-axis - up normal on paper ) , Dextrorotation = false
+		int i = 1;
+		int j = 1;               // Unitary vector x, y direction
+		ref2D( bool swerve = true ): swerve( swerve ){
+			if( !swerve ){j = -1;}
+		}
+	} ;
 
-			void Point2D::set(float x0, float y0, uint16_t color0 = 0x000000){
-				x = x0;
-				y = y0;
-				color = color0;
-			};
-
-			void Point2D::setInv(bool mx, bool my){
-				if (mx) inv_x=-1;
-				if (my) inv_y=-1;
-			};
-
-			void Point2D::move(float dx, float dy){
-				Point2D::x = Point2D::x + inv_x*dx;
-				Point2D::y = Point2D::y + inv_y*dy;
-			};
-
-			void Point2D::move(Matrix<3, 3, float> m){
-				Point2D::move(m(0,2),0);
-				Point2D::move(0,m(1,2));
-			};
-
-			void Point2D::fwd(float d){
-				Point2D::move(d,0);
-			};
-
-			void Point2D::back(float d){
-				Point2D::move(-d,0);
-			};
-
-			void Point2D::left(float d){
-				Point2D::move(0,d);
-			};
-
-			void Point2D::right(float d){
-				Point2D::move(0, -d);
-			};
-	};
-
- 	float ang2rad=180/PI;
-	
-	//Multiply 3x3 matrix with a 3x1 ( 3x3 * 3x1 = 3x1 )  vector or Matrix or viceversa ( 1x3 * 3x3 = 1x3 ) 
-
- 	Matrix<3,3> se2(float px , float py , float angle, bool inv = 1 ){
-    
+ 	// --------------------------------- //
+	// -------- Pose 2D Class -----------//
+ 	 
+	Pose2D se2(float px , float py , float angle, bool inv = 1 ){
 		float transM[3][3] = {{cos(angle/ang2rad),-sin(angle/ang2rad),px},{sin(angle/ang2rad),cos(angle/ang2rad),py},{0, 0,1}};
-		Matrix <3,3> m (transM);
+		Pose2D m;
+		m = transM;
 		return m;
 	}
 
- 	Matrix<2,2, float> rot(float angle){
-		
+ 	rot2D rot2(float angle){
 		float arrayRot[2][2] = {{cos(angle/ang2rad),-sin(angle/ang2rad)},{sin(angle/ang2rad),cos(angle/ang2rad)}};
-		Matrix <2, 2, float> m (arrayRot);
+		rot2D m;
+		m = arrayRot;
 		return m;
-	
 	}
 
-	Matrix<3,3, float> rot2tr(float angle){
-		
-		Matrix <3, 3, float> m = se2 (0, 0, angle);
+	Pose2D trot2( float angle ){
+		Pose2D m = se2 (0, 0, angle);
+		return m;	
+	}
+
+	Pose2D transl2( float px , float py ){
+		Pose2D m = se2 (px, py, 0);
 		return m;
-	
 	}
 
-	Matrix<3, 3, float> trans2tr( float px , float py ){
-		
-		Matrix <3, 3, float> m = se2 (px, py, 0);
+	Pose2D transl2( vector2D p ){
+		Pose2D m = se2 (p(0,0), p(0,1), 0);
 		return m;
-	
 	}
 
-	Point2D Mt2Pt ( Matrix<3, 3, float> m ){
-		
-		return Point2D (m(0, 2), m(1, 2));
-
-	}
-
-	Matrix<3, 3, float> Pt2Mt ( Point2D p ){
-		return se2( p.x , p.y , 0 );
-
-	}
-
-
-	class Pose2D{
-
+	class Bot2DController {
 		public:
-
-			Matrix<3, 3, float> m ;
-			int inv_x=1; 
-			int inv_y=1;
-
-			Pose2D(void){
-				m = se2(0,0,0);
+			Pose2D T;
+			Bot2DController(void){
+				Bot2DController::T = se2(0,0,0);
 			};
 
-			Pose2D(float px , float py , float angle){
-				Pose2D::m = se2(px, py, angle);
+			Bot2DController(float px , float py , float angle){
+				Bot2DController::T = se2(px, py, angle);
 			};
 
-			/*Pose2D(Pose2D *p){
-				Pose2D::m = p.m;
-				Pose2D::inv_x = p.inv_x;
-				Pose2D::inv_y = p.inv_y;
-			};*/
-
-			void Pose2D::setInv(bool mx, bool my){
-				if (mx) inv_x=-1;
-				if (my) inv_y=-1;
+			Bot2DController(Bot2DController *p){
+				Bot2DController::T = p->T;
 			};
 
 			void set(float px , float py , float angle){
-				Pose2D::m = se2(px, py, angle);
+				Bot2DController::T = se2(px, py, angle);
 			};
 
-			void set(Pose2D p){
-				Pose2D::m = p.m;
-				Pose2D::inv_x = p.inv_x;
-				Pose2D::inv_y = p.inv_y;
+			Pose2D Bot2DController::move( float px , float py ){
+				Pose2D m = se2(px, py, 0);
+				Bot2DController::T *= m;
+				return Bot2DController::T;
 			};
 
-			Matrix<3, 3, float> Pose2D::move(Matrix<3, 3, float> m){
-				//Inverse axis not defined
-				Pose2D::m = Pose2D::m*m;
-				return Pose2D::m;
+			Pose2D Bot2DController::move( Pose2D m ){
+				Bot2DController::T = Bot2DController::T*m;
+				return Bot2DController::T;
 			};
 
-			Matrix<3, 3, float> Pose2D::move(float px , float py , float angle){
-				if (Pose2D::inv_x == -1) {px*=-1; angle*=-1;}
-				if (Pose2D::inv_y == -1) {py*=-1;angle*=-1;}
-
-				Pose2D::m = Pose2D::m*se2(px,py,angle);
-				return Pose2D::m;
-			};
-
-			Matrix<3, 3, float> Pose2D::fwd(float d){
-				Pose2D::m = Pose2D::move(d,0,0);
-				return Pose2D::m;
-			};
-
-			Matrix<3, 3, float> Pose2D::back(float d){
-				Pose2D::m = Pose2D::move(-d,0,0);
-				return Pose2D::m;
-			};
-
-			Matrix<3, 3, float> Pose2D::left(float d){
-				Pose2D::m = Pose2D::move(0,-d,0);
-				return Pose2D::m;
-			};
-
-			Matrix<3, 3, float> Pose2D::right(float d){
-				Pose2D::m = Pose2D::move(0,d,0);
-				return Pose2D::m;
-			};
-
-			Matrix<3, 3, float> Pose2D::turn(float angle){
-				Pose2D::m = Pose2D::move(0,0,angle);
-				return Pose2D::m;
-			};
-
-			Pose2D::print(){
+			Bot2DController::print(){
 				Serial.print(" Pose :  ");
-				Serial << Pose2D::m;
-				Serial.println();
-				
+				Serial << Bot2DController::T << "\n";
 			}
+
+			Pose2D turn(float angle){
+				Pose2D m = se2(0, 0, angle);
+				Bot2DController::T *= m;
+				return Bot2DController::T;
+			};
+
 	};
 
+	class Bot2D : public Bot2DController {
+		public:
 
+			Bot2D(void) : Bot2DController( ){
+				
+			};
+
+			Pose2D fwd(float d){
+				Bot2D::move(d,0);
+				return Bot2D::T;
+			};
+
+			Pose2D back(float d){
+				Bot2D::move(-d,0);
+				return Bot2D::T;
+			};
+
+			Pose2D left(float d){
+				Bot2D::move(0,d);
+				return Bot2D::T;
+			};
+
+			Pose2D right(float d){
+				Bot2D::move(0,-d);
+				return Bot2D::T;
+			};
+	};
+
+	class Link2D : public Bot2DController{
+		public:
+			//Pose2D[] l;
+
+	};
+
+	// -------- Point 2D Class -----------//
+	class Point2D{
+		public:
+			vector2D p;
+			ref2D ref;
+			
+			Point2D(float x0 = 0, float y0 = 0) {
+				p(0) = x0;
+				p(1) = y0;
+			};
+			void setX( float x ) { Point2D::p(0) = x; }
+			uint16_t getX(){ return p(0); }
+			void setY( float y ) { Point2D::p(1) = y; }
+			uint16_t getY(){ return p(1) ; }
+			void setXY( float x, float y ) { setX( x ); setY( y ); }
+			
+			void move(float dx, float dy){
+				p(0) += ref.i*dx;
+				p(1) += ref.j*dy;
+			};
+
+			void move( Pose2D m ){
+				move(m(0,2), m(1,2));
+			}
+			void fwd( float d ){
+				move(d,0);
+			};
+			void back( float d ){
+				move(-d,0);
+			};
+			void left( float d ){
+				move(0,d);
+			};
+			void right( float d ){
+				move(0, -d);
+			};
+	};
+
+	class Pixel2D : public Point2D{
+		public:
+			uint16_t color;
+			Pixel2D(float x0 = 0, float y0 = 0, uint16_t colour = 0 ): Point2D( x0, y0 ), color( colour ){};
+			void setColor( uint16_t colour ) { color = colour; }
+			uint16_t getColor(){ return color; }
+	};
+
+ 	Point2D Mt2Pt ( Pose2D m ){
+		return Point2D (m(0, 2), m(1, 2));
+	}
+
+	Pose2D Pt2Mt ( Point2D P ){
+		return se2( P.p(0,2) , P.p(1,2) , 0 );
+	} 
+	
 	float distance(float x0, float y0, float xf, float yf){
 		return sqrt(pow(xf-x0,2)+pow(yf-y0,2));
 	}
 
 	float distance(Point2D p0, Point2D pf){
-		return sqrt(pow(pf.x-p0.x,2)+pow(pf.y-p0.y,2));
+		return sqrt(pow(pf.p(0,0)-p0.p(0,0),2)+pow(pf.p(0,1)-p0.p(0,1),2));
 	}
 
 	float distance(Pose2D P0, Pose2D Pf){
-		return sqrt(pow(Pf.m(0,2) - P0.m(0,2),2)+pow(Pf.m(1,2) - P0.m(1,2),2));
+		return sqrt(pow(Pf(0,2) - P0(0,2),2)+pow(Pf(1,2) - P0(1,2),2));
 	}
-
-	class Link2D{
-		public:
-			
-
-	};
-
 #endif
